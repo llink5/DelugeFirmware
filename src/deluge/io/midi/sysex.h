@@ -54,6 +54,7 @@ enum SysexCommands : uint8_t {
 	Debug,      // Debugging
 	Json,       // Json Request
 	JsonReply,  // Json Response
+	MemAccess,  // Memory read/write access
 	Pong = 0x7F // Pong reply
 };
 

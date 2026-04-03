@@ -35,3 +35,5 @@ __pycache__
 *.srctrl*
 
 .deluge_hex_key
+cloc-report.txt
+cloc-report.txt

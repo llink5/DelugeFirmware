@@ -22,6 +22,7 @@
 #include "hid/display/display.h"
 #include "hid/hid_sysex.h"
 #include "io/debug/log.h"
+#include "io/midi/mem_access_sysex.h"
 #include "io/midi/midi_device.h"
 #include "io/midi/midi_device_manager.h"
 #include "io/midi/sysex.h"
@@ -817,6 +818,10 @@ void MidiEngine::midiSysexReceived(MIDICable& cable, uint8_t* data, int32_t len)
 
 	case SysEx::SysexCommands::Json:
 		smSysex::sysexReceived(cable, payloadStart, payloadLength);
+		break;
+
+	case SysEx::SysexCommands::MemAccess:
+		MemAccess::sysexReceived(cable, payloadStart, payloadLength);
 		break;
 
 	case SysEx::SysexCommands::Pong: // PONG, reserved
