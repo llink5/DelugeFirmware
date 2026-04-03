@@ -633,6 +633,54 @@ ActionResult KeyboardScreen::verticalEncoderAction(int32_t offset, bool inCardRo
 
 ActionResult KeyboardScreen::horizontalEncoderAction(int32_t offset) {
 
+	// Shift button pressed - edit clip length (analogous to ClipView::horizontalEncoderAction)
+	if (isNoUIModeActive() && !Buttons::isButtonPressed(deluge::hid::button::Y_ENC)
+	    && Buttons::isShiftButtonPressed()) {
+
+		Clip* clip = getCurrentClip();
+
+		// If tempoless recording, don't allow
+		if (!clip->currentlyScrollableAndZoomable()) {
+			display->displayPopup(deluge::l10n::get(deluge::l10n::String::STRING_FOR_CANT_EDIT_LENGTH));
+			return ActionResult::DEALT_WITH;
+		}
+
+		if (sdRoutineLock) {
+			return ActionResult::REMIND_ME_OUTSIDE_CARD_ROUTINE;
+		}
+
+		uint32_t oldLength = clip->loopLength;
+		uint32_t xZoom = currentSong->xZoom[NAVIGATION_CLIP];
+		uint32_t newLength;
+
+		if (offset >= 1) {
+			newLength = oldLength + xZoom;
+			if (newLength > (uint32_t)kMaxSequenceLength) {
+				return ActionResult::DEALT_WITH;
+			}
+		}
+		else {
+			if (oldLength <= xZoom) {
+				return ActionResult::DEALT_WITH;
+			}
+			newLength = oldLength - xZoom;
+			if (newLength == 0) {
+				return ActionResult::DEALT_WITH;
+			}
+		}
+
+		ActionType actionType =
+		    (newLength < oldLength) ? ActionType::CLIP_LENGTH_DECREASE : ActionType::CLIP_LENGTH_INCREASE;
+		Action* action = actionLogger.getNewAction(actionType, ActionAddition::ALLOWED);
+		if (action && action->currentClip != clip) {
+			action = actionLogger.getNewAction(actionType, ActionAddition::NOT_ALLOWED);
+		}
+
+		currentSong->setClipLength(clip, newLength, action);
+
+		return ActionResult::DEALT_WITH;
+	}
+
 	layout_list[getCurrentInstrumentClip()->keyboardState.currentLayout]->handleHorizontalEncoder(
 	    offset, (Buttons::isShiftButtonPressed() && isUIModeWithinRange(padActionUIModes)), pressedPads,
 	    xEncoderActive);
